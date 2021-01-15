@@ -146,6 +146,34 @@ def show_restaurant_details(restaurant_id):
                 "success": True,
                 "message": f"Restaurant {str(restaurant_id)} successfully deleted"
             })
+        except Exception():
+            abort(422)
+
+@app.route('/api/v1/restaurants/<int:restaurant_id>/tables', methods=['POST'])
+def show_restaurant_tables(restaurant_id):
+    '''Creates a new table in a restaurant
+    '''
+    try:
+        this_table = Table(restaurant_id=restaurant_id)
+        this_table.insert()
+        return jsonify({
+            'success': True,
+            'message': f'Table Created in restaurant {str(restaurant_id)}'
+        })
+    except Exception():
+        abort(422)
+
+@app.route('/api/v1/restaurants/<int:restaurant_id>/tables/<int:table_id>', methods=['DELETE'])
+def delete_restaurant_tables(restaurant_id, table_id):
+    try:
+        this_table = Table.query().filter_by(id=table_id).first()
+        this_table.delete()
+        return jsonify({
+            'success': True,
+            'message': f'Successfully delete table {str(table_id)} from restaurant {str(restaurant_id)}'
+        })
+    except Exception():
+        abort(422)
 ##########################
 ##### Error Handling #####
 ##########################
