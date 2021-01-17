@@ -91,6 +91,7 @@ def show_restaurant_details(restaurant_id):
             }
         )
 
+
 @app.route('api/v1/restaurants/<int:restaurant_id>/', methods=['PATCH'])
 def show_restaurant_details(restaurant_id):
     '''Updates details of the given restaurant_id
@@ -132,6 +133,7 @@ def show_restaurant_details(restaurant_id):
         except Exception:
             abort(422)
 
+
 @app.route('api/v1/restaurants/<int:restaurant_id>/', methods=['DELETE'])
 def show_restaurant_details(restaurant_id):
     '''Deletion of the given restaurant_id
@@ -149,6 +151,7 @@ def show_restaurant_details(restaurant_id):
         except Exception():
             abort(422)
 
+
 @app.route('/api/v1/restaurants/<int:restaurant_id>/tables', methods=['POST'])
 def show_restaurant_tables(restaurant_id):
     '''Creates a new table in a restaurant
@@ -163,6 +166,7 @@ def show_restaurant_tables(restaurant_id):
     except Exception():
         abort(422)
 
+
 @app.route('/api/v1/restaurants/<int:restaurant_id>/tables/<int:table_id>', methods=['DELETE'])
 def delete_restaurant_table(restaurant_id, table_id):
     try:
@@ -174,6 +178,7 @@ def delete_restaurant_table(restaurant_id, table_id):
         })
     except Exception():
         abort(422)
+
 
 @app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['GET'])
 def get_restaurant_visits(restaurant_id):
@@ -188,6 +193,7 @@ def get_restaurant_visits(restaurant_id):
         })
     except Exception():
         abort(404)
+
 
 @app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['POST'])
 def post_new_visit(restaurant_id):
@@ -212,6 +218,7 @@ def post_new_visit(restaurant_id):
     except Exception:
         abort(422)
 
+
 @app.route('api/v1/restaurants/<int:restaurant_id>/visits/{<int:visit_id>', methods=['PATCH'])
 def update_visit(restaurant_id, visit_id):
     '''Stop and end the visit
@@ -227,6 +234,7 @@ def update_visit(restaurant_id, visit_id):
     except Exception:
         abort(422)
 
+
 @app.route('api/v1/guests', methods='GET')
 def get_guest_list():
     '''Get the list of all guests
@@ -239,6 +247,7 @@ def get_guest_list():
         })
     except Exception:
         abort(422)
+
 
 @app.route('api/v1/guests', methods='POST')
 def create_new_guest():
@@ -271,6 +280,7 @@ def create_new_guest():
     except Exception:
         abort(422)
 
+
 @app.route('api/v1/guests/<int:guest_id>', methods='GET')
 def get_guest_details(guest_id):
     '''Get guest details
@@ -283,6 +293,81 @@ def get_guest_details(guest_id):
         })
     except Exception:
         abort(404)
+
+
+@app.route('api/v1/guests/<int:guest_id>', methods='PATCH')
+def get_guest_details(guest_id):
+    '''Update guest details
+    '''
+    try:
+        body = request.get_json()
+        name = body.get(name, None)
+        street = body.get(street, None)
+        city = body.get(city, None)
+        postcode = body.get(postcode, None)
+        country = body.get(country, None)
+        email = body.get(email, None)
+        sick = body.get(sick, None)
+        sick_since = body.get(sick_since, None)
+        
+        this_guest = User.query().filter_by(id=guest_id).first()
+        
+        if name and name != this_guest.name:
+            this_guest.name = name
+        if country and country != this_guest.country:
+            this_guest.country = country
+        if city and city != this_guest.city:
+            this_guest.city = city
+        if postcode and postcode != this_guest.postcode:
+            this_guest.postcode = postcode
+        if street and street != this_guest.street:
+            this_guest.street = street
+        if email and email != this_guest.email:
+            this_guest.email = email
+        if sick and sick != this_guest.sick:
+            this_guest.sick = sick
+        if sick_since and sick_since != this_guest.sick_since:
+            this_guest.sick_since = sick_since
+        
+        this_guest.update()
+        this_guest = User.query().filter_by(id=guest_id).first()
+
+        return jsonify({
+            'success': True,
+            'guest': this_guest.json_repr()
+        })
+    except Exception:
+        abort(404)
+
+@app.route('/api/v1/guests/<int:guest_id>/notifications', method='GET')
+def list_a_users_notifications(guest_id):
+    '''Searches for any notifications of a user, in case somebody was sick nearby
+    '''
+    # Find out my visits in that restaurant, and for each visit, find all other
+    # guests that have been there in my time which would have been sick.
+    try:
+        my_visits = Visits.query().filter_by(id=guest_id).all()
+        visits_of_sick_people = Visits.query.distinct(Visits.visit_start_dt, Visits.visit_end_dt).join(Users).filter(User.sick == True).all()
+        # SQL Description
+        #Select
+        #distinct
+        #v.start_date
+        #,v.end_date
+        #from Users as u inner join visits as v
+        #on u.user_id = v.user_id
+        #--and u.sick_since <= v.start_date or u.sick_since <= v.end_date
+        #where u.sick = True
+        dangerous_visits = 0
+        for i in visits_of_sick_people:
+            start = i[0]
+            end = i[1]
+            dangerous_visits += Visits.query().filter(and_(Visits.user_id=guest_id, visit_start_dt >= start, visit_end_dt <= end)).count()
+        return jsonify({
+            'success': True
+            'number_of_dangerous_visits': dangerous_visits
+        })
+    except Exception:
+        abort(422)
 
 
 ##########################
