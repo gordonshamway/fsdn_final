@@ -16,7 +16,7 @@ class Restaurant(db.Model):
     email = Column(String(150))
     amount_of_tables = Column(Integer(), nullable=True)
     creation_date = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified_date = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified_date = Column(DateTime, default=func.now())
 
     def json_repr(self):
         return {
@@ -51,10 +51,10 @@ class Restaurant(db.Model):
 
 class Table(db.Model):
     id = Column(Integer(), primary_key=True)
-    restaurant_id = Column(Integer())
+    restaurant_id = Column(Integer(), c)
     is_soft_deleted = Column(Boolean() default=False, nullable=False)
     creation_date = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified_date = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified_date = Column(DateTime, default=func.now())
 
     def json_repr(self):
         return {
@@ -97,7 +97,7 @@ class User(db.Model):
     sick = Column(Boolean(), default=False, nullable=False)
     sick_since = Column(Date())
     creation_date = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified_date = Column(DateTime, default=datetime.datetime.utcnow)
+    last_modified_date = Column(DateTime, default=func.now())
 
     def json_repr(self):
         return {
@@ -132,9 +132,9 @@ class User(db.Model):
 
 class Visit(db.Model):
     id = Column(Integer(), primary_key=True)
-    restaurant_id = Column(Integer(), nullable=False)
-    table_id = Column(Integer(), nullable=False)
-    user_id = Column(Integer(), nullable=False)
+    restaurant_id = Column(Integer(), ForeignKey('restaurant.id'), nullable=False)
+    table_id = Column(Integer(), ForeignKey('table.id'), nullable=False)
+    user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
     visit_start_dt = Column(DateTime, default=datetime.datetime.utcnow)
     visit_end_dt = Column(DateTime()))
 

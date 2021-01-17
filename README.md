@@ -49,10 +49,8 @@ Here is the list of all possible endpoints:
 # How to Startmat
 
 # Todo
-- Relationships in the datamodel (Foreign Key, etc.)
 - Setting Up the db
 - Testing the api
 - Fiddleing arround with the datamodel
 - Write tests to test it
 - Document it within flasgger
-- 

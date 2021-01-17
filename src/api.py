@@ -159,6 +159,12 @@ def show_restaurant_tables(restaurant_id):
     try:
         this_table = Table(restaurant_id=restaurant_id)
         this_table.insert()
+
+        # also add the one table to the overview in restaurant details
+        this_restaurant = Restaurant.query().filter_by(id=restaurant_id).first()
+        this_restaurant.amount_of_tables += 1
+        this_restaurant.update()
+
         return jsonify({
             'success': True,
             'message': f'Table Created in restaurant {str(restaurant_id)}'
@@ -172,6 +178,12 @@ def delete_restaurant_table(restaurant_id, table_id):
     try:
         this_table = Table.query().filter_by(id=table_id).first()
         this_table.delete()
+
+        # also deduct the one table to the overview in restaurant details
+        this_restaurant = Restaurant.query().filter_by(id=restaurant_id).first()
+        this_restaurant.amount_of_tables -= 1
+        this_restaurant.update()
+        
         return jsonify({
             'success': True,
             'message': f'Successfully delete table {str(table_id)} from restaurant {str(restaurant_id)}'
