@@ -3,8 +3,8 @@ from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
 import json
 from flask_cors import CORS
-
-from .v1.db.models import db_drop_and_create_all, setup_db, Restaurant
+from sqlalchemy.sql import func
+from .v1.db.models import db_drop_and_create_all, setup_db, Restaurant, Visit, Table, User
 from .v1.auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
@@ -164,7 +164,7 @@ def show_restaurant_tables(restaurant_id):
         abort(422)
 
 @app.route('/api/v1/restaurants/<int:restaurant_id>/tables/<int:table_id>', methods=['DELETE'])
-def delete_restaurant_tables(restaurant_id, table_id):
+def delete_restaurant_table(restaurant_id, table_id):
     try:
         this_table = Table.query().filter_by(id=table_id).first()
         this_table.delete()
@@ -174,6 +174,117 @@ def delete_restaurant_tables(restaurant_id, table_id):
         })
     except Exception():
         abort(422)
+
+@app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['GET'])
+def get_restaurant_visits(restaurant_id):
+    '''Receive the list of all guests for that restaurant_id
+    @TODO: Maybe I need more parameters here to control the start_date, or get also only sick people
+    '''
+    try:
+        this_restaurants_visits = Visit.query().filter_by(restaurant_id=restaurant_id).all()
+        return jsonify({
+            'success': True,
+            'visits': [v.json_repr() for v in this_restaurants_visits]
+        })
+    except Exception():
+        abort(404)
+
+@app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['POST'])
+def post_new_visit(restaurant_id):
+    '''Post a new visit for the restaurant_id
+    '''
+    try:
+        body = request.get_json()
+        table_id body.get(table_id, None)
+        user_id = body.get(user_id, None)
+        if None in (table_id, user_id):
+            abort(422)
+        this_visit = Visit(
+            restaurant_id=restaurant_id,
+            table_id=table_id,
+            user_id=user_id
+        )
+        this_visit.insert()
+        return jsonify({
+            'success': True,
+            'message': f'New visit created at table {str(table_id)} in restaurant {str(restaurant_id)}'
+        })
+    except Exception:
+        abort(422)
+
+@app.route('api/v1/restaurants/<int:restaurant_id>/visits/{<int:visit_id>', methods=['PATCH'])
+def update_visit(restaurant_id, visit_id):
+    '''Stop and end the visit
+    '''
+    try:
+        this_visit = Visit.query().filter_by(id=visit_id).first()
+        this_visit.visit_end_dt = func.current_date()
+        this_visit.update()
+        return jsonify({
+            'success': True,
+            'message': f'Visit {str(visit_id)} has been updated in restaurant {str(restaurant_id)}'
+        })
+    except Exception:
+        abort(422)
+
+@app.route('api/v1/guests', methods='GET')
+def get_guest_list():
+    '''Get the list of all guests
+    '''
+    try:
+        user_count = User.query().count()
+        return jsonify({
+            'success': True,
+            'user_count': user_count
+        })
+    except Exception:
+        abort(422)
+
+@app.route('api/v1/guests', methods='POST')
+def create_new_guest():
+    '''Create new user
+    '''
+    try:
+        body = request.get_json()
+        name = body.get(name, None)
+        street = body.get(street, None)
+        city = body.get(city, None)
+        postcode = body.get(postcode, None)
+        country = body.get(country, None)
+        email = body.get(email, None)
+
+        if None in (name, street, city, postcode, country, email):
+            abort(422)
+        this_user = User(
+            name=name,
+            street=street,
+            city=city,
+            postcode=postcode,
+            country=country,
+            email=email
+        )
+        this_user.insert()
+        return jsonify({
+            'success': True,
+            'user': this_user.json_repr()
+        })
+    except Exception:
+        abort(422)
+
+@app.route('api/v1/guests/<int:guest_id>', methods='GET')
+def get_guest_details(guest_id):
+    '''Get guest details
+    '''
+    try:
+        this_guest = User.query().filter_by(id=guest_id).first()
+        return jsonify({
+            'success': True,
+            'guest': this_guest.json_repr()
+        })
+    except Exception:
+        abort(404)
+
+
 ##########################
 ##### Error Handling #####
 ##########################

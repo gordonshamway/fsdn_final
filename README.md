@@ -15,21 +15,24 @@ Here is the list of all possible endpoints:
    - PATCH - Update that restaurant
    - DELETE - Delete that restaurant
 3. /api/v1/restaurants/{ID}/tables
-   - GET - Show all tables of that restaurant
    - POST - Create a new table
 4. /api/v1/restaurants/{ID}/tables/{ID}
    - DELETE - soft delete a table
-5. /api/v1/restaurants/{ID}/tables/{ID}/visits
-   - GET - Show all visits for that table 
+
+
+5. /api/v1/restaurants/{ID}/visits
+   - GET - Show all visits for that restaurant 
    - POST - Create a new visit
-6. /api/v1/guests/
-   - GET - Show all guests 
+6. /api/v1/restauants/{ID}/visits/{visit_ID}
+   - PATCH 
+7. /api/v1/guests/
+   - GET - Show number of all guests 
    - POST - new guest
-7. /api/v1/guests/{ID}  
+8. /api/v1/guests/{ID}  
    - GET - Shows guest detail info
    - PATCH - update user info (sick and sick_date)
    - DELETE - Delete a user (no right assigned)
-8. /api/v1/guests/{ID}/notifications
+9.  /api/v1/guests/{ID}/notifications
    - GET - Shows a message if the guest was in a restaurant at the time when somebody sick was nearby
 
 ## OPTIONAL
