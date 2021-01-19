@@ -1,4 +1,9 @@
+from flask import Flask, request, jsonify, abort
+from sqlalchemy.sql import func
+from api.models import Restaurant, User, Table, Visit
 from api import app
+from datetime import datetime
+import json
 ##########################
 ######### Routes #########
 ##########################
@@ -8,20 +13,19 @@ def create_new_restaurant():
     '''Creates a new restaurant via POST
     '''
     body = request.get_json()
-    name = body.get(name, None)
-    country = body.get(country, None)
-    city = body.get(city, None)
-    postcode = body.get(postcode, None)
-    street = body.get(street, None)
-    owner = body.get(owner, None)
-    email = body.get(email,None)
+    name = body.get('name', None)
+    country = body.get('country', None)
+    city = body.get('city', None)
+    postcode = body.get('postcode', None)
+    street = body.get('street', None)
+    owner = body.get('owner', None)
+    email = body.get('email',None)
     amount_of_tables = 0
     if None in (body, name, country, city, postcode, street, owner, email):
         abort(422)
     else:
         try:
             new_restaurant = Restaurant(
-                body=body,
                 name=name,
                 country=country,
                 city=city,
@@ -49,12 +53,12 @@ def list_restaurants():
         restaurants = Restaurant.query.order_by(Restaurant.city).all()
     except Exception:
         abort(500)
-    if not drinks:
+    if not restaurants :
         abort(404)
     else:
         return jsonify({
             "success": True,
-            "drinks": [r.json_repr() for r in restaurants]
+            "restaurants": [r.json_repr() for r in restaurants]
         })
 
 
@@ -73,7 +77,7 @@ def show_restaurant_details(restaurant_id):
         )
 
 
-@app.route('/api/v1/restaurants/<int:restaurant_id>/', methods=['PATCH'])
+@app.route('/api/v1/restaurants/<int:restaurant_id>', methods=['PATCH'])
 def update_restaurant_details(restaurant_id):
     '''Updates details of the given restaurant_id
     '''
@@ -82,13 +86,13 @@ def update_restaurant_details(restaurant_id):
         abort(404)
     else:
         body = request.get_json()
-        name = body.get(name, None)
-        country = body.get(country, None)
-        city = body.get(city, None)
-        postcode = body.get(postcode, None)
-        street = body.get(street, None)
-        owner = body.get(owner, None)
-        email = body.get(email, None)
+        name = body.get('name', None)
+        country = body.get('country', None)
+        city = body.get('city', None)
+        postcode = body.get('postcode', None)
+        street = body.get('street', None)
+        owner = body.get('owner', None)
+        email = body.get('email', None)
         
         if name and name != this_restaurant.name:
             this_restaurant.name = name
@@ -115,7 +119,7 @@ def update_restaurant_details(restaurant_id):
             abort(422)
 
 
-@app.route('/api/v1/restaurants/<int:restaurant_id>/', methods=['DELETE'])
+@app.route('/api/v1/restaurants/<int:restaurant_id>', methods=['DELETE'])
 def delete_restaurant(restaurant_id):
     '''Deletion of the given restaurant_id
     '''
@@ -142,34 +146,36 @@ def show_restaurant_tables(restaurant_id):
         this_table.insert()
 
         # also add the one table to the overview in restaurant details
-        this_restaurant = Restaurant.query().filter_by(id=restaurant_id).first()
+        this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
         this_restaurant.amount_of_tables += 1
         this_restaurant.update()
 
         return jsonify({
             'success': True,
-            'message': f'Table Created in restaurant {str(restaurant_id)}'
+            'message': f'Table created in restaurant {str(restaurant_id)}'
         })
-    except Exception():
+    except Exception:
         abort(422)
 
 
 @app.route('/api/v1/restaurants/<int:restaurant_id>/tables/<int:table_id>', methods=['DELETE'])
 def delete_restaurant_table(restaurant_id, table_id):
     try:
-        this_table = Table.query().filter_by(id=table_id).first()
+        this_table = Table.query.filter_by(id=table_id).first()
+        if not this_table:
+            abort(404)
         this_table.delete()
 
         # also deduct the one table to the overview in restaurant details
-        this_restaurant = Restaurant.query().filter_by(id=restaurant_id).first()
+        this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
         this_restaurant.amount_of_tables -= 1
         this_restaurant.update()
         
         return jsonify({
             'success': True,
-            'message': f'Successfully delete table {str(table_id)} from restaurant {str(restaurant_id)}'
+            'message': f'Successfully deleted table {str(table_id)} from restaurant {str(restaurant_id)}'
         })
-    except Exception():
+    except Exception:
         abort(422)
 
 
@@ -179,12 +185,12 @@ def get_restaurant_visits(restaurant_id):
     @TODO: Maybe I need more parameters here to control the start_date, or get also only sick people
     '''
     try:
-        this_restaurants_visits = Visit.query().filter_by(restaurant_id=restaurant_id).all()
+        this_restaurants_visits = Visit.query.filter_by(restaurant_id=restaurant_id).all()
         return jsonify({
             'success': True,
             'visits': [v.json_repr() for v in this_restaurants_visits]
         })
-    except Exception():
+    except Exception:
         abort(404)
 
 
@@ -194,8 +200,8 @@ def post_new_visit(restaurant_id):
     '''
     try:
         body = request.get_json()
-        table_id = body.get(table_id, None)
-        user_id = body.get(user_id, None)
+        table_id = body.get('table_id', None)
+        user_id = body.get('user_id', None)
         if None in (table_id, user_id):
             abort(422)
         this_visit = Visit(
@@ -212,20 +218,23 @@ def post_new_visit(restaurant_id):
         abort(422)
 
 
-@app.route('/api/v1/restaurants/<int:restaurant_id>/visits/{<int:visit_id>', methods=['PATCH'])
+@app.route('/api/v1/restaurants/<int:restaurant_id>/visits/<int:visit_id>', methods=['PATCH'])
 def update_visit(restaurant_id, visit_id):
     '''Stop and end the visit
     '''
-    try:
-        this_visit = Visit.query().filter_by(id=visit_id).first()
-        this_visit.visit_end_dt = func.current_date()
-        this_visit.update()
-        return jsonify({
-            'success': True,
-            'message': f'Visit {str(visit_id)} has been updated in restaurant {str(restaurant_id)}'
-        })
-    except Exception:
-        abort(422)
+    #try:
+    this_visit = Visit.query.filter_by(id=visit_id).first()
+    print(this_visit.json_repr())
+    #if not this_visit:
+    #    abort(404)
+    this_visit.visit_end_dt = func.now()
+    this_visit.update()
+    return jsonify({
+        'success': True,
+        'message': f'Visit {str(visit_id)} has been updated in restaurant {str(restaurant_id)}'
+    })
+    #except Exception:
+    #    abort(422)
 
 
 @app.route('/api/v1/guests', methods=['GET'])
@@ -233,7 +242,7 @@ def get_guest_list():
     '''Get the list of all guests
     '''
     try:
-        user_count = User.query().count()
+        user_count = User.query.count()
         return jsonify({
             'success': True,
             'user_count': user_count
@@ -248,12 +257,12 @@ def create_new_guest():
     '''
     try:
         body = request.get_json()
-        name = body.get(name, None)
-        street = body.get(street, None)
-        city = body.get(city, None)
-        postcode = body.get(postcode, None)
-        country = body.get(country, None)
-        email = body.get(email, None)
+        name = body.get('name', None)
+        street = body.get('street', None)
+        city = body.get('city', None)
+        postcode = body.get('postcode', None)
+        country = body.get('country', None)
+        email = body.get('email', None)
 
         if None in (name, street, city, postcode, country, email):
             abort(422)
@@ -279,7 +288,7 @@ def get_guest_details(guest_id):
     '''Get guest details
     '''
     try:
-        this_guest = User.query().filter_by(id=guest_id).first()
+        this_guest = User.query.filter_by(id=guest_id).first()
         return jsonify({
             'success': True,
             'guest': this_guest.json_repr()
@@ -294,17 +303,18 @@ def update_guest_details(guest_id):
     '''
     try:
         body = request.get_json()
-        name = body.get(name, None)
-        street = body.get(street, None)
-        city = body.get(city, None)
-        postcode = body.get(postcode, None)
-        country = body.get(country, None)
-        email = body.get(email, None)
-        sick = body.get(sick, None)
-        sick_since = body.get(sick_since, None)
+        name = body.get('name', None)
+        street = body.get('street', None)
+        city = body.get('city', None)
+        postcode = body.get('postcode', None)
+        country = body.get('country', None)
+        email = body.get('email', None)
+        sick = body.get('sick', None)
+        sick_since = body.get('sick_since', None)
         
-        this_guest = User.query().filter_by(id=guest_id).first()
-        
+        this_guest = User.query.filter_by(id=guest_id).first()
+        if not this_guest:
+            abort(404)
         if name and name != this_guest.name:
             this_guest.name = name
         if country and country != this_guest.country:
@@ -317,20 +327,25 @@ def update_guest_details(guest_id):
             this_guest.street = street
         if email and email != this_guest.email:
             this_guest.email = email
-        if sick and sick != this_guest.sick:
-            this_guest.sick = sick
-        if sick_since and sick_since != this_guest.sick_since:
-            this_guest.sick_since = sick_since
+
+        sick_converted = json.loads(sick.lower())
+        if sick and sick_converted != this_guest.sick:
+            this_guest.sick = sick_converted
+
+        # Convert ISO Value 2021-01-19 to Date Type
+        sick_since_converted = datetime.strptime(sick_since, '%Y-%m-%d')
+        if sick_since_converted and sick_since_converted != this_guest.sick_since:
+            this_guest.sick_since = sick_since_converted
         
         this_guest.update()
-        this_guest = User.query().filter_by(id=guest_id).first()
+        this_guest = User.query.filter_by(id=guest_id).first()
 
         return jsonify({
             'success': True,
             'guest': this_guest.json_repr()
         })
     except Exception:
-        abort(404)
+        abort(422)
 
 @app.route('/api/v1/guests/<int:guest_id>/notifications', methods=['GET'])
 def list_a_users_notifications(guest_id):
@@ -338,9 +353,10 @@ def list_a_users_notifications(guest_id):
     '''
     # Find out my visits in that restaurant, and for each visit, find all other
     # guests that have been there in my time which would have been sick.
+    
     try:
-        my_visits = Visits.query().filter_by(id=guest_id).all()
-        visits_of_sick_people = Visits.query.distinct(Visits.visit_start_dt, Visits.visit_end_dt).join(Users).filter(User.sick == True).all()
+        my_visits = Visit.query.filter_by(id=guest_id).all()
+        visits_of_sick_people = Visit.query.distinct(Visit.visit_start_dt, Visit.visit_end_dt).join(User).filter(User.sick == True).all()
         # SQL Description
         #Select
         #distinct
@@ -352,9 +368,9 @@ def list_a_users_notifications(guest_id):
         #where u.sick = True
         dangerous_visits = 0
         for i in visits_of_sick_people:
-            start = i[0]
-            end = i[1]
-            dangerous_visits += Visits.query().filter(and_(Visits.user_id==guest_id, visit_start_dt >= start, visit_end_dt <= end)).count()
+            start = i.visit_start_dt
+            end = i.visit_end_dt
+            dangerous_visits += Visit.query.filter(Visit.user_id == guest_id, Visit.visit_start_dt >= start, Visit.visit_end_dt <= end).count()
         return jsonify({
             'success': True,
             'number_of_dangerous_visits': dangerous_visits
