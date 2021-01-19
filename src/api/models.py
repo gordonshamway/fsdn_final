@@ -1,22 +1,25 @@
-from sqlalchemy import Column, String, Integer, Date, DateTime, Boolean
-from flask_sqlalchemy import SQLAlchemy
+#from flask import Flask
+#from sqlalchemy import Column, db.String, db.Integer, Date, DateTime, Boolean, ForeignKey
+#from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
+#from flask_migrate import Migrate
 import datetime
-
-db = SQLAlchemy()
+#import config
+#import os
+from api import db
 
 class Restaurant(db.Model):
-    id = Column(Integer(), primary_key=True)
-    name = Column(String_(100), nullable=False)
-    country = Column(String(100), nullable=False)
-    city = Column(String(100), nullable=False)
-    postcode = Column(String(10), nullable=False)
-    street = Column(String(50))
-    owner = Column(String(150))
-    email = Column(String(150))
-    amount_of_tables = Column(Integer(), nullable=True)
-    creation_date = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified_date = Column(DateTime, default=func.now())
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    country = db.Column(db.String(100), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    postcode = db.Column(db.String(10), nullable=False)
+    street = db.Column(db.String(50))
+    owner = db.Column(db.String(150))
+    email = db.Column(db.String(150))
+    amount_of_tables = db.Column(db.Integer(), nullable=True)
+    creation_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    last_modified_date = db.Column(db.DateTime, default=func.now())
 
     def json_repr(self):
         return {
@@ -50,17 +53,17 @@ class Restaurant(db.Model):
 
 
 class Table(db.Model):
-    id = Column(Integer(), primary_key=True)
-    restaurant_id = Column(Integer(), c)
-    is_soft_deleted = Column(Boolean() default=False, nullable=False)
-    creation_date = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified_date = Column(DateTime, default=func.now())
+    id = db.Column(db.Integer(), primary_key=True)
+    restaurant_id = db.Column(db.Integer(), db.ForeignKey('restaurant.id'), nullable=False)
+    #is_soft_deleted = db.Column(Boolean() default=False, nullable=False)
+    creation_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    last_modified_date = db.Column(db.DateTime, default=func.now())
 
     def json_repr(self):
         return {
             'id': self.id,
             'restaurant_id': self.restaurant_id,
-            'is_soft_deleted': self.is_soft_deleted,
+            #'is_soft_deleted': self.is_soft_deleted,
             'creation_date': self.creation_date,
             'last_modified_date': self.last_modified_date
             }
@@ -74,11 +77,11 @@ class Table(db.Model):
         db.session.commit()
     
     def soft_delete(self):
-        self.is_soft_deleted = True
+        #self.is_soft_deleted = True
         self.last_modified_date=func.now()
         db.session.commit()
 
-    def hard_delete(self):
+    def delete(self):
         db.session.delete(self)
         db.session.commit()
 
@@ -87,17 +90,17 @@ class Table(db.Model):
 
 
 class User(db.Model):
-    id = Column(Integer(), primary_key=True)
-    name = Column(String_(100), nullable=False)
-    street = Column(String(50), nullable=False)
-    city = Column(String(100), nullable=False)
-    postcode = Column(String(10), nullable=False)
-    country = Column(String(100), nullable=False)
-    email = Column(String(150), nullable=False)
-    sick = Column(Boolean(), default=False, nullable=False)
-    sick_since = Column(Date())
-    creation_date = Column(DateTime, default=datetime.datetime.utcnow)
-    last_modified_date = Column(DateTime, default=func.now())
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    street = db.Column(db.String(50), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    postcode = db.Column(db.String(10), nullable=False)
+    country = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
+    sick = db.Column(db.Boolean(), default=False, nullable=False)
+    sick_since = db.Column(db.Date())
+    creation_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    last_modified_date = db.Column(db.DateTime, default=func.now())
 
     def json_repr(self):
         return {
@@ -106,7 +109,7 @@ class User(db.Model):
             'street': self.street,
             'city': self.city,
             'postcode': self.postcode,
-            'country:' self.country,
+            'country': self.country,
             'email': self.email,
             'sick': self.sick,
             'sick_since': self.sick_since,
@@ -131,12 +134,12 @@ class User(db.Model):
 
 
 class Visit(db.Model):
-    id = Column(Integer(), primary_key=True)
-    restaurant_id = Column(Integer(), ForeignKey('restaurant.id'), nullable=False)
-    table_id = Column(Integer(), ForeignKey('table.id'), nullable=False)
-    user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
-    visit_start_dt = Column(DateTime, default=datetime.datetime.utcnow)
-    visit_end_dt = Column(DateTime()))
+    id = db.Column(db.Integer(), primary_key=True)
+    restaurant_id = db.Column(db.Integer(), db.ForeignKey('restaurant.id'), nullable=False)
+    table_id = db.Column(db.Integer(), db.ForeignKey('table.id'), nullable=False)
+    user_id = db.Column(db.Integer(), db.ForeignKey('user.id'), nullable=False)
+    visit_start_dt = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    visit_end_dt = db.Column(db.DateTime())
 
     def json_repr(self):
         return {

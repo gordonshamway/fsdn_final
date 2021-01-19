@@ -1,28 +1,9 @@
-import os
-from flask import Flask, request, jsonify, abort
-from sqlalchemy import exc
-import json
-from flask_cors import CORS
-from sqlalchemy.sql import func
-from .v1.db.models import db_drop_and_create_all, setup_db, Restaurant, Visit, Table, User
-from .v1.auth.auth import AuthError, requires_auth
-
-app = Flask(__name__)
-setup_db(app)
-
-'''
-@TODO uncomment the following line to initialize the datbase
-!! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
-!! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
-'''
-# db_drop_and_create_all()
-
-
+from api import app
 ##########################
 ######### Routes #########
 ##########################
 
-@app.route('api/v1/restaurants', methods=['POST'])
+@app.route('/api/v1/restaurants', methods=['POST'])
 def create_new_restaurant():
     '''Creates a new restaurant via POST
     '''
@@ -59,7 +40,7 @@ def create_new_restaurant():
             abort(422)
 
 
-@app.route('api/v1/restaurants', methods=['GET'])
+@app.route('/api/v1/restaurants', methods=['GET'])
 #@requires_auth('get:restaurant-list')
 def list_restaurants():
     '''Shows a list of all existing restaurants
@@ -77,7 +58,7 @@ def list_restaurants():
         })
 
 
-@app.route('api/v1/restaurants/<int:restaurant_id>/', methods=['GET'])
+@app.route('/api/v1/restaurants/<int:restaurant_id>/', methods=['GET'])
 def show_restaurant_details(restaurant_id):
     '''Shows details of the given restaurant_id
     '''
@@ -92,8 +73,8 @@ def show_restaurant_details(restaurant_id):
         )
 
 
-@app.route('api/v1/restaurants/<int:restaurant_id>/', methods=['PATCH'])
-def show_restaurant_details(restaurant_id):
+@app.route('/api/v1/restaurants/<int:restaurant_id>/', methods=['PATCH'])
+def update_restaurant_details(restaurant_id):
     '''Updates details of the given restaurant_id
     '''
     this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
@@ -134,8 +115,8 @@ def show_restaurant_details(restaurant_id):
             abort(422)
 
 
-@app.route('api/v1/restaurants/<int:restaurant_id>/', methods=['DELETE'])
-def show_restaurant_details(restaurant_id):
+@app.route('/api/v1/restaurants/<int:restaurant_id>/', methods=['DELETE'])
+def delete_restaurant(restaurant_id):
     '''Deletion of the given restaurant_id
     '''
     this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
@@ -213,7 +194,7 @@ def post_new_visit(restaurant_id):
     '''
     try:
         body = request.get_json()
-        table_id body.get(table_id, None)
+        table_id = body.get(table_id, None)
         user_id = body.get(user_id, None)
         if None in (table_id, user_id):
             abort(422)
@@ -231,7 +212,7 @@ def post_new_visit(restaurant_id):
         abort(422)
 
 
-@app.route('api/v1/restaurants/<int:restaurant_id>/visits/{<int:visit_id>', methods=['PATCH'])
+@app.route('/api/v1/restaurants/<int:restaurant_id>/visits/{<int:visit_id>', methods=['PATCH'])
 def update_visit(restaurant_id, visit_id):
     '''Stop and end the visit
     '''
@@ -247,7 +228,7 @@ def update_visit(restaurant_id, visit_id):
         abort(422)
 
 
-@app.route('api/v1/guests', methods='GET')
+@app.route('/api/v1/guests', methods=['GET'])
 def get_guest_list():
     '''Get the list of all guests
     '''
@@ -261,7 +242,7 @@ def get_guest_list():
         abort(422)
 
 
-@app.route('api/v1/guests', methods='POST')
+@app.route('/api/v1/guests', methods=['POST'])
 def create_new_guest():
     '''Create new user
     '''
@@ -293,7 +274,7 @@ def create_new_guest():
         abort(422)
 
 
-@app.route('api/v1/guests/<int:guest_id>', methods='GET')
+@app.route('/api/v1/guests/<int:guest_id>', methods=['GET'])
 def get_guest_details(guest_id):
     '''Get guest details
     '''
@@ -307,8 +288,8 @@ def get_guest_details(guest_id):
         abort(404)
 
 
-@app.route('api/v1/guests/<int:guest_id>', methods='PATCH')
-def get_guest_details(guest_id):
+@app.route('/api/v1/guests/<int:guest_id>', methods=['PATCH'])
+def update_guest_details(guest_id):
     '''Update guest details
     '''
     try:
@@ -351,7 +332,7 @@ def get_guest_details(guest_id):
     except Exception:
         abort(404)
 
-@app.route('/api/v1/guests/<int:guest_id>/notifications', method='GET')
+@app.route('/api/v1/guests/<int:guest_id>/notifications', methods=['GET'])
 def list_a_users_notifications(guest_id):
     '''Searches for any notifications of a user, in case somebody was sick nearby
     '''
@@ -373,9 +354,9 @@ def list_a_users_notifications(guest_id):
         for i in visits_of_sick_people:
             start = i[0]
             end = i[1]
-            dangerous_visits += Visits.query().filter(and_(Visits.user_id=guest_id, visit_start_dt >= start, visit_end_dt <= end)).count()
+            dangerous_visits += Visits.query().filter(and_(Visits.user_id==guest_id, visit_start_dt >= start, visit_end_dt <= end)).count()
         return jsonify({
-            'success': True
+            'success': True,
             'number_of_dangerous_visits': dangerous_visits
         })
     except Exception:
@@ -439,8 +420,8 @@ def server_error(error):
         "message": "server error"
     }), 500
 
-@app.errorhandler(AuthError)
-def handle_auth_error(err):
-    response = jsonify(err.error)
-    response.status_code = err.status_code
-    return response
+#    @app.errorhandler(AuthError)
+#    def handle_auth_error(err):
+#        response = jsonify(err.error)
+#        response.status_code = err.status_code
+#        return response
