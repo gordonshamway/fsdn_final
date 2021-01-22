@@ -1,12 +1,29 @@
-#from flask import Flask
-#from sqlalchemy import Column, db.String, db.Integer, Date, DateTime, Boolean, ForeignKey
-#from flask_sqlalchemy import SQLAlchemy
+import os, datetime
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
-#from flask_migrate import Migrate
-import datetime
-#import config
-#import os
-from api import db
+from flask_migrate import Migrate
+from sqlalchemy import Column, String, Integer, Date, DateTime, Boolean, ForeignKey
+
+#database_name = "corona"
+#username = os.environ.get('PROD_USERNAME')
+#password = os.environ.get('PROD_PASSWORD')
+#server = os.environ.get('PROD_SERVER')
+#port = os.environ.get('PROD_PORT')
+#database_path = "postgres://{}:{}@{}:{}/{}".format(username, password, server, port, database_name)
+
+db = SQLAlchemy()
+
+def setup_db(app):#, database_path=database_path):
+    '''binds a flask application and a SQLAlchemy service
+    '''
+    db.app = app
+    db.init_app(app)
+    migrate = Migrate(app,db)
+    with app.app_context():
+        if app.config['DB_NAME'] == 'corona_test':
+            db.drop_all()
+        db.create_all()
 
 class Restaurant(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
