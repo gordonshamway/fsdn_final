@@ -5,7 +5,7 @@ from sqlalchemy import exc
 from flask_cors import CORS
 from sqlalchemy.sql import func
 from flask_sqlalchemy import SQLAlchemy
-#from v1.auth.auth import AuthError, requires_auth
+from .auth.auth import AuthError, requires_auth
 from .database.models import setup_db, Restaurant, Table, User, Visit
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -28,7 +28,8 @@ def create_app(config_object=DevConfig()):
     ##########################
 
     @app.route('/api/v1/restaurants', methods=['POST'])
-    def create_new_restaurant():
+    @requires_auth('post:restaurant')
+    def create_new_restaurant(token):
         '''Creates a new restaurant via POST
         '''
         body = request.get_json()
@@ -64,8 +65,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants', methods=['GET'])
-    #@requires_auth('get:restaurant-list')
-    def list_restaurants():
+    @requires_auth('get:restaurant')
+    def list_restaurants(token):
         '''Shows a list of all existing restaurants
         '''
         try:
@@ -82,7 +83,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>', methods=['GET'])
-    def show_restaurant_details(restaurant_id):
+    @requires_auth('get:restaurant-details')
+    def show_restaurant_details(token, restaurant_id):
         '''Shows details of the given restaurant_id
         '''
         this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
@@ -97,7 +99,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>', methods=['PATCH'])
-    def update_restaurant_details(restaurant_id):
+    @requires_auth('patch:restaurant-details')
+    def update_restaurant_details(token, restaurant_id):
         '''Updates details of the given restaurant_id
         '''
         this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
@@ -139,7 +142,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>', methods=['DELETE'])
-    def delete_restaurant(restaurant_id):
+    @requires_auth('delete:restaurant')
+    def delete_restaurant(token, restaurant_id):
         '''Deletion of the given restaurant_id
         '''
         this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
@@ -157,7 +161,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>/tables', methods=['POST'])
-    def create_restaurant_tables(restaurant_id):
+    @requires_auth('post:restaurant-table')
+    def create_restaurant_tables(token, restaurant_id):
         '''Creates a new table in a restaurant
         '''
         try:
@@ -184,7 +189,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>/tables/<int:table_id>', methods=['DELETE'])
-    def delete_restaurant_table(restaurant_id, table_id):
+    @requires_auth('delete:restaurant-table')
+    def delete_restaurant_table(token, restaurant_id, table_id):
         try:
             this_table = Table.query.filter_by(id=table_id).first()
             if not this_table:
@@ -205,7 +211,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['GET'])
-    def get_restaurant_visits(restaurant_id):
+    @requires_auth('get:restaurant-visits')
+    def get_restaurant_visits(token, restaurant_id):
         '''Receive the list of all guests for that restaurant_id
         @TODO: Maybe I need more parameters here to control the start_date, or get also only sick people
         '''
@@ -220,7 +227,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['POST'])
-    def post_new_visit(restaurant_id):
+    @requires_auth('post:restaurant-visits')
+    def post_new_visit(token, restaurant_id):
         '''Post a new visit for the restaurant_id
         '''
         try:
@@ -245,7 +253,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>/visits/<int:visit_id>', methods=['PATCH'])
-    def update_visit(restaurant_id, visit_id):
+    @requires_auth('patch:restaurant-visits')
+    def update_visit(token, restaurant_id, visit_id):
         '''Stop and end the visit
         '''
         try:
@@ -264,7 +273,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/guests', methods=['GET'])
-    def get_guest_list():
+    @requires_auth('get:guests')
+    def get_guest_list(token):
         '''Get the list of all guests
         '''
         try:
@@ -278,7 +288,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/guests', methods=['POST'])
-    def create_new_guest():
+    @requires_auth('post:guests')
+    def create_new_guest(token):
         '''Create new user
         '''
         try:
@@ -310,7 +321,8 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/guests/<int:guest_id>', methods=['GET'])
-    def get_guest_details(guest_id):
+    @requires_auth('get:guest-details')
+    def get_guest_details(token, guest_id):
         '''Get guest details
         '''
         try:
@@ -324,57 +336,59 @@ def create_app(config_object=DevConfig()):
 
 
     @app.route('/api/v1/guests/<int:guest_id>', methods=['PATCH'])
-    def update_guest_details(guest_id):
+    @requires_auth('patch:guest-details')
+    def update_guest_details(token, guest_id):
         '''Update guest details
         '''
-        #try:
-        body = request.get_json()
-        name = body.get('name', None)
-        street = body.get('street', None)
-        city = body.get('city', None)
-        postcode = body.get('postcode', None)
-        country = body.get('country', None)
-        email = body.get('email', None)
-        sick = body.get('sick', None)
-        sick_since = body.get('sick_since', None)
-        
-        this_guest = User.query.filter_by(id=guest_id).first()
-        if not this_guest:
-            abort(404)
-        if name and name != this_guest.name:
-            this_guest.name = name
-        if country and country != this_guest.country:
-            this_guest.country = country
-        if city and city != this_guest.city:
-            this_guest.city = city
-        if postcode and postcode != this_guest.postcode:
-            this_guest.postcode = postcode
-        if street and street != this_guest.street:
-            this_guest.street = street
-        if email and email != this_guest.email:
-            this_guest.email = email
-        if sick:
-            sick_converted = json.loads(sick.lower())
-        if sick and sick_converted != this_guest.sick:
-            this_guest.sick = sick_converted
-        if sick_since:
-            # Convert ISO Value 2021-01-19 to Date Type
-            sick_since_converted = datetime.strptime(sick_since, '%Y-%m-%d')
-            if sick_since_converted and sick_since_converted != this_guest.sick_since:
-                this_guest.sick_since = sick_since_converted
-        
-        this_guest.update()
-        this_guest = User.query.filter_by(id=guest_id).first()
+        try:
+            body = request.get_json()
+            name = body.get('name', None)
+            street = body.get('street', None)
+            city = body.get('city', None)
+            postcode = body.get('postcode', None)
+            country = body.get('country', None)
+            email = body.get('email', None)
+            sick = body.get('sick', None)
+            sick_since = body.get('sick_since', None)
+            
+            this_guest = User.query.filter_by(id=guest_id).first()
+            if not this_guest:
+                abort(404)
+            if name and name != this_guest.name:
+                this_guest.name = name
+            if country and country != this_guest.country:
+                this_guest.country = country
+            if city and city != this_guest.city:
+                this_guest.city = city
+            if postcode and postcode != this_guest.postcode:
+                this_guest.postcode = postcode
+            if street and street != this_guest.street:
+                this_guest.street = street
+            if email and email != this_guest.email:
+                this_guest.email = email
+            if sick:
+                sick_converted = json.loads(sick.lower())
+            if sick and sick_converted != this_guest.sick:
+                this_guest.sick = sick_converted
+            if sick_since:
+                # Convert ISO Value 2021-01-19 to Date Type
+                sick_since_converted = datetime.strptime(sick_since, '%Y-%m-%d')
+                if sick_since_converted and sick_since_converted != this_guest.sick_since:
+                    this_guest.sick_since = sick_since_converted
+            
+            this_guest.update()
+            this_guest = User.query.filter_by(id=guest_id).first()
 
-        return jsonify({
-            'success': True,
-            'guest': this_guest.json_repr()
+            return jsonify({
+                'success': True,
+                'guest': this_guest.json_repr()
         })
-        #except Exception:
-        #    abort(422)
+        except Exception:
+            abort(422)
 
     @app.route('/api/v1/guests/<int:guest_id>/notifications', methods=['GET'])
-    def list_a_users_notifications(guest_id):
+    @requires_auth('get:guest-notifications')
+    def list_a_users_notifications(token, guest_id):
         '''Searches for any notifications of a user, in case somebody was sick nearby
         '''
         # Find out my visits in that restaurant, and for each visit, find all other
@@ -462,10 +476,10 @@ def create_app(config_object=DevConfig()):
             "message": "server error"
         }), 500
 
-    #    @app.errorhandler(AuthError)
-    #    def handle_auth_error(err):
-    #        response = jsonify(err.error)
-    #        response.status_code = err.status_code
-    #        return response
+    @app.errorhandler(AuthError)
+    def handle_auth_error(err):
+        response = jsonify(err.error)
+        response.status_code = err.status_code
+        return response
 
     return app
