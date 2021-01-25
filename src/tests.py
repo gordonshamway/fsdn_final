@@ -549,7 +549,7 @@ class RestaurantTestCase(unittest.TestCase):
         res = self.client().get(f'/api/v1/guests/{guest_id}', headers=headers)
         res_payload = json.loads(res.data)
         self.assertEqual(res_payload['success'], False)
-    
+
     def test_restaurant_manager_success(self):
         TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikx1OUhVcTJVWjdaRkdkdkNKenZ1diJ9.eyJpc3MiOiJodHRwczovL3NidTQ3NTMzLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MDBkNGUzZDAzMGI4ZjAwNmE1MTQzODIiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAiLCJpYXQiOjE2MTE1OTk2MDUsImV4cCI6MTYxMTYwNjgwNSwiYXpwIjoiSGxqVHpUM1RIZnUwUDM3OGVqRjA2WEgwalJ5Y3JCRWMiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImdldDpyZXN0YXVyYW50IiwiZ2V0OnJlc3RhdXJhbnQtZGV0YWlscyIsImdldDpyZXN0YXVyYW50LXZpc2l0cyIsInBhdGNoOnJlc3RhdXJhbnQtZGV0YWlscyIsInBvc3Q6cmVzdGF1cmFudCIsInBvc3Q6cmVzdGF1cmFudC10YWJsZSJdfQ.OlSvq3GVHNaab6gWDl_CNfb7p-UCwdqr5Ut4mM-ZX5sU1Yt0WrWiXDLgd6fMYOSlEtsDlybmg-M-XS-B9BVbrK1yrW8FESysFM9_Zq-Q386GzBsPUWCqVG7QGoruHa4kvkJhMeytbRLQrk3lV_F1ngkyjZ1CvbgD0Z2GokKnUlpT3GhD4j1oO2rwUoFYQ9lpvZngJe_dsMLVrMxxDS8jMhYJiapKL4B-57Ddojb6oT58AE_IRe3KGruSd8GFS309HMV7w_eB7g-7PYUVA0xNjbMC4lSy0MOFoBS3GjGfBjdQkNe5ew9YcFi_gqoS9WpDgqmxC8KMuKyaYF8KnwN4fw'
         headers = {'Authorization': 'Bearer ' +
@@ -629,6 +629,7 @@ class RestaurantTestCase(unittest.TestCase):
         res = self.client().get(f'/api/v1/guests/{guest_id}', headers=headers)
         res_payload = json.loads(res.data)
         self.assertEqual(res_payload['success'], False)
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
