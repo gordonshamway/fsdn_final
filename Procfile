@@ -1,1 +1,1 @@
-web: gunicorn --chdir src/api app=create_app()
+web: gunicorn wsgi:app
