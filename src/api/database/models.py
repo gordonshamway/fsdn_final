@@ -1,4 +1,5 @@
-import os, datetime
+import os
+import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
@@ -14,16 +15,18 @@ from sqlalchemy import Column, String, Integer, Date, DateTime, Boolean, Foreign
 
 db = SQLAlchemy()
 
-def setup_db(app):#, database_path=database_path):
+
+def setup_db(app):  # , database_path=database_path):
     '''binds a flask application and a SQLAlchemy service
     '''
     db.app = app
     db.init_app(app)
-    migrate = Migrate(app,db)
+    migrate = Migrate(app, db)
     with app.app_context():
         if app.config['DB_NAME'] == 'corona_test':
             db.drop_all()
         db.create_all()
+
 
 class Restaurant(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
@@ -51,18 +54,18 @@ class Restaurant(db.Model):
             'amount_of_tables': self.amount_of_tables,
             'creation_date': self.creation_date,
             'last_modified_date': self.last_modified_date
-            }
+        }
 
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    
+
     def delete(self):
         db.session.delete(self)
         db.session.commit()
-    
+
     def update(self):
-        self.last_modified_date=func.now()
+        self.last_modified_date = func.now()
         db.session.commit()
 
     def __repr__(self):
@@ -71,8 +74,9 @@ class Restaurant(db.Model):
 
 class Table(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    restaurant_id = db.Column(db.Integer(), db.ForeignKey('restaurant.id'), nullable=False)
-    #is_soft_deleted = db.Column(Boolean() default=False, nullable=False)
+    restaurant_id = db.Column(db.Integer(), db.ForeignKey(
+        'restaurant.id'), nullable=False)
+    # is_soft_deleted = db.Column(Boolean() default=False, nullable=False)
     creation_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     last_modified_date = db.Column(db.DateTime, default=func.now())
 
@@ -80,22 +84,22 @@ class Table(db.Model):
         return {
             'id': self.id,
             'restaurant_id': self.restaurant_id,
-            #'is_soft_deleted': self.is_soft_deleted,
+            # 'is_soft_deleted': self.is_soft_deleted,
             'creation_date': self.creation_date,
             'last_modified_date': self.last_modified_date
-            }
+        }
 
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    
+
     def update(self):
-        self.last_modified_date=func.now()
+        self.last_modified_date = func.now()
         db.session.commit()
-    
+
     def soft_delete(self):
         #self.is_soft_deleted = True
-        self.last_modified_date=func.now()
+        self.last_modified_date = func.now()
         db.session.commit()
 
     def delete(self):
@@ -132,14 +136,14 @@ class User(db.Model):
             'sick_since': self.sick_since,
             'creation_date': self.creation_date,
             'last_modified_date': self.last_modified_date
-            }
+        }
 
     def insert(self):
         db.session.add(self)
         db.session.commit()
 
     def update(self):
-        self.last_modified_date=func.now()
+        self.last_modified_date = func.now()
         db.session.commit()
 
     def delete(self):
@@ -152,8 +156,10 @@ class User(db.Model):
 
 class Visit(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    restaurant_id = db.Column(db.Integer(), db.ForeignKey('restaurant.id'), nullable=False)
-    table_id = db.Column(db.Integer(), db.ForeignKey('table.id'), nullable=False)
+    restaurant_id = db.Column(db.Integer(), db.ForeignKey(
+        'restaurant.id'), nullable=False)
+    table_id = db.Column(db.Integer(), db.ForeignKey(
+        'table.id'), nullable=False)
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'), nullable=False)
     visit_start_dt = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     visit_end_dt = db.Column(db.DateTime())
@@ -166,16 +172,16 @@ class Visit(db.Model):
             'user_id': self.user_id,
             'visit_start_dt': self.visit_start_dt,
             'visit_end_dt': self.visit_end_dt,
-            }
+        }
 
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    
+
     def delete(self):
         db.session.delete(self)
         db.session.commit()
-    
+
     def update(self):
         db.session.commit()
 

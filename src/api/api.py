@@ -1,4 +1,5 @@
-import os, json
+import os
+import json
 from datetime import datetime
 from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
@@ -11,12 +12,13 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from .config import DevConfig, TestConfig
 
+
 def create_app(config_object=DevConfig()):
     app = Flask(__name__)
     app.config.from_object(config_object)
     #print('this show the current config after applying it:')
-    #print('*******************************************')
-    #print(app.config)
+    # print('*******************************************')
+    # print(app.config)
     db = SQLAlchemy(app)
     db.init_app(app)
     setup_db(app)
@@ -39,7 +41,7 @@ def create_app(config_object=DevConfig()):
         postcode = body.get('postcode', None)
         street = body.get('street', None)
         owner = body.get('owner', None)
-        email = body.get('email',None)
+        email = body.get('email', None)
         amount_of_tables = 0
         if None in (body, name, country, city, postcode, street, owner, email):
             abort(422)
@@ -63,7 +65,6 @@ def create_app(config_object=DevConfig()):
             except Exception:
                 abort(422)
 
-
     @app.route('/api/v1/restaurants', methods=['GET'])
     @requires_auth('get:restaurant')
     def list_restaurants(token):
@@ -73,14 +74,13 @@ def create_app(config_object=DevConfig()):
             restaurants = Restaurant.query.order_by(Restaurant.city).all()
         except Exception:
             abort(500)
-        if not restaurants :
+        if not restaurants:
             abort(404)
         else:
             return jsonify({
                 "success": True,
                 "restaurants": [r.json_repr() for r in restaurants]
             })
-
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>', methods=['GET'])
     @requires_auth('get:restaurant-details')
@@ -94,9 +94,8 @@ def create_app(config_object=DevConfig()):
             return jsonify({
                 "success": True,
                 "restaurant": this_restaurant.json_repr()
-                }
+            }
             )
-
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>', methods=['PATCH'])
     @requires_auth('patch:restaurant-details')
@@ -115,7 +114,7 @@ def create_app(config_object=DevConfig()):
             street = body.get('street', None)
             owner = body.get('owner', None)
             email = body.get('email', None)
-            
+
             if name and name != this_restaurant.name:
                 this_restaurant.name = name
             if country and country != this_restaurant.country:
@@ -140,7 +139,6 @@ def create_app(config_object=DevConfig()):
             except Exception:
                 abort(422)
 
-
     @app.route('/api/v1/restaurants/<int:restaurant_id>', methods=['DELETE'])
     @requires_auth('delete:restaurant')
     def delete_restaurant(token, restaurant_id):
@@ -159,24 +157,24 @@ def create_app(config_object=DevConfig()):
             except Exception():
                 abort(422)
 
-
     @app.route('/api/v1/restaurants/<int:restaurant_id>/tables', methods=['POST'])
     @requires_auth('post:restaurant-table')
     def create_restaurant_tables(token, restaurant_id):
         '''Creates a new table in a restaurant
         '''
         try:
-            this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
+            this_restaurant = Restaurant.query.filter_by(
+                id=restaurant_id).first()
             if this_restaurant:
                 this_table = Table(restaurant_id=restaurant_id)
                 this_table.insert()
 
                 # also add the one table to the overview in restaurant details
-                this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
+                this_restaurant = Restaurant.query.filter_by(
+                    id=restaurant_id).first()
                 this_restaurant.amount_of_tables += 1
                 this_restaurant.update()
 
-                
                 return jsonify({
                     'success': True,
                     'table_id': this_table.id,
@@ -186,7 +184,6 @@ def create_app(config_object=DevConfig()):
                 abort(404)
         except Exception:
             abort(422)
-
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>/tables/<int:table_id>', methods=['DELETE'])
     @requires_auth('delete:restaurant-table')
@@ -198,17 +195,17 @@ def create_app(config_object=DevConfig()):
             this_table.delete()
 
             # also deduct the one table to the overview in restaurant details
-            this_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
+            this_restaurant = Restaurant.query.filter_by(
+                id=restaurant_id).first()
             this_restaurant.amount_of_tables -= 1
             this_restaurant.update()
-            
+
             return jsonify({
                 'success': True,
                 'message': f'Successfully deleted table {str(table_id)} from restaurant {str(restaurant_id)}'
             })
         except Exception:
             abort(404)
-
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['GET'])
     @requires_auth('get:restaurant-visits')
@@ -217,14 +214,14 @@ def create_app(config_object=DevConfig()):
         @TODO: Maybe I need more parameters here to control the start_date, or get also only sick people
         '''
         try:
-            this_restaurants_visits = Visit.query.filter_by(restaurant_id=restaurant_id).all()
+            this_restaurants_visits = Visit.query.filter_by(
+                restaurant_id=restaurant_id).all()
             return jsonify({
                 'success': True,
                 'visits': [v.json_repr() for v in this_restaurants_visits]
             })
         except Exception:
             abort(404)
-
 
     @app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['POST'])
     @requires_auth('post:restaurant-visits')
@@ -251,7 +248,6 @@ def create_app(config_object=DevConfig()):
         except Exception:
             abort(422)
 
-
     @app.route('/api/v1/restaurants/<int:restaurant_id>/visits/<int:visit_id>', methods=['PATCH'])
     @requires_auth('patch:restaurant-visits')
     def update_visit(token, restaurant_id, visit_id):
@@ -259,7 +255,7 @@ def create_app(config_object=DevConfig()):
         '''
         try:
             this_visit = Visit.query.filter_by(id=visit_id).first()
-            
+
             if not this_visit:
                 abort(404)
             this_visit.visit_end_dt = func.now()
@@ -270,7 +266,6 @@ def create_app(config_object=DevConfig()):
             })
         except Exception:
             abort(422)
-
 
     @app.route('/api/v1/guests', methods=['GET'])
     @requires_auth('get:guests')
@@ -286,9 +281,8 @@ def create_app(config_object=DevConfig()):
         except Exception:
             abort(422)
 
-
     @app.route('/api/v1/guests', methods=['POST'])
-    @requires_auth('post:guests')
+    @requires_auth('post:guest')
     def create_new_guest(token):
         '''Create new user
         '''
@@ -319,7 +313,6 @@ def create_app(config_object=DevConfig()):
         except Exception:
             abort(422)
 
-
     @app.route('/api/v1/guests/<int:guest_id>', methods=['GET'])
     @requires_auth('get:guest-details')
     def get_guest_details(token, guest_id):
@@ -333,7 +326,6 @@ def create_app(config_object=DevConfig()):
             })
         except Exception:
             abort(404)
-
 
     @app.route('/api/v1/guests/<int:guest_id>', methods=['PATCH'])
     @requires_auth('patch:guest-details')
@@ -350,7 +342,7 @@ def create_app(config_object=DevConfig()):
             email = body.get('email', None)
             sick = body.get('sick', None)
             sick_since = body.get('sick_since', None)
-            
+
             this_guest = User.query.filter_by(id=guest_id).first()
             if not this_guest:
                 abort(404)
@@ -372,17 +364,18 @@ def create_app(config_object=DevConfig()):
                 this_guest.sick = sick_converted
             if sick_since:
                 # Convert ISO Value 2021-01-19 to Date Type
-                sick_since_converted = datetime.strptime(sick_since, '%Y-%m-%d')
+                sick_since_converted = datetime.strptime(
+                    sick_since, '%Y-%m-%d')
                 if sick_since_converted and sick_since_converted != this_guest.sick_since:
                     this_guest.sick_since = sick_since_converted
-            
+
             this_guest.update()
             this_guest = User.query.filter_by(id=guest_id).first()
 
             return jsonify({
                 'success': True,
                 'guest': this_guest.json_repr()
-        })
+            })
         except Exception:
             abort(422)
 
@@ -393,31 +386,32 @@ def create_app(config_object=DevConfig()):
         '''
         # Find out my visits in that restaurant, and for each visit, find all other
         # guests that have been there in my time which would have been sick.
-        
+
         try:
             my_visits = Visit.query.filter_by(id=guest_id).all()
-            visits_of_sick_people = Visit.query.distinct(Visit.visit_start_dt, Visit.visit_end_dt).join(User).filter(User.sick == True).all()
+            visits_of_sick_people = Visit.query.distinct(
+                Visit.visit_start_dt, Visit.visit_end_dt).join(User).filter(User.sick == True).all()
             # SQL Description
-            #Select
-            #distinct
-            #v.start_date
-            #,v.end_date
-            #from Users as u inner join visits as v
-            #on u.user_id = v.user_id
-            #--and u.sick_since <= v.start_date or u.sick_since <= v.end_date
-            #where u.sick = True
+            # Select
+            # distinct
+            # v.start_date
+            # ,v.end_date
+            # from Users as u inner join visits as v
+            # on u.user_id = v.user_id
+            # --and u.sick_since <= v.start_date or u.sick_since <= v.end_date
+            # where u.sick = True
             dangerous_visits = 0
             for i in visits_of_sick_people:
                 start = i.visit_start_dt
                 end = i.visit_end_dt
-                dangerous_visits += Visit.query.filter(Visit.user_id == guest_id, Visit.visit_start_dt >= start, Visit.visit_end_dt <= end).count()
+                dangerous_visits += Visit.query.filter(
+                    Visit.user_id == guest_id, Visit.visit_start_dt >= start, Visit.visit_end_dt <= end).count()
             return jsonify({
                 'success': True,
                 'number_of_dangerous_visits': dangerous_visits
             })
         except Exception:
             abort(422)
-
 
     ##########################
     ##### Error Handling #####
@@ -431,7 +425,6 @@ def create_app(config_object=DevConfig()):
             "message": "unprocessable"
         }), 422
 
-
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
@@ -439,7 +432,6 @@ def create_app(config_object=DevConfig()):
             "error": 404,
             "message": "not found"
         }), 404
-
 
     @app.errorhandler(401)
     def unauthorized(error):
@@ -449,7 +441,6 @@ def create_app(config_object=DevConfig()):
             "message": "unauthorized"
         }), 401
 
-
     @app.errorhandler(403)
     def forbidden(error):
         return jsonify({
@@ -458,7 +449,6 @@ def create_app(config_object=DevConfig()):
             "message": "forbidden"
         }), 403
 
-
     @app.errorhandler(405)
     def method_not_allowed(error):
         return jsonify({
@@ -466,7 +456,6 @@ def create_app(config_object=DevConfig()):
             "error": 405,
             "message": "method not allowed"
         }), 405
-
 
     @app.errorhandler(500)
     def server_error(error):
