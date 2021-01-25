@@ -5,7 +5,7 @@ from sqlalchemy import exc
 from flask_cors import CORS
 from sqlalchemy.sql import func
 from flask_sqlalchemy import SQLAlchemy
-from auth import AuthError, requires_auth
+from .auth.auth import AuthError, requires_auth
 from .database.models import setup_db, Restaurant, Table, User, Visit
 from flask_cors import CORS
 from flask_migrate import Migrate
