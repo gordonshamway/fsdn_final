@@ -1,19 +1,41 @@
-# Goal
-# Structure
-# ERD
+# Motivation for the project
+The Corona-lockdowns around the world are pretty bad. With this project I want to do my part in partly reopen the society. With the help of this api, restaurants could open again, because it would be easy for a smartphone
+app and it´s user to receive notifications whenever they have been in contact with other sick people at the time when they visited a specific restaurant.
+This requires that a user is honest and updates it´s own status of sickness and the date he became sick.
+You can find the app here [Corona_API_on_Heroku](https://corona-fsnd.herokuapp.com)
+# Tech Stack
+1. Python3
+2. Flask for local developement and framework
+3. SQL-Alchemy as ORM mapper
+4. Postgres as database
+5. Auth0 to generate JWT tokens
+6. gunicorn as productive webserver
+7. Heroku for hosting
+
+# Dependencies
+- See under "How to start"
+- Auth0 to generate the JWT Token
+
+# Entity-Relationship-Diagram
 This is the basic ERD Diagramm that describes the relationship of the underlying tables:
 
 ![ERD-Diagramm](/docs/erd.png)
+
+
 # Endpoints
+For all endpoints you have to send the Authorization Bearer with the token.
+For most of the endpoints also 'Content-type': 'application/json' is necessary. 
 Here is the list of all possible endpoints:
 
 ## Restaurants
-Can be created by owner, Government can get lists of all. Owner can see the details and update its details.
-Deletion can only by done by admin.
 1. /api/v1/restaurants/
-    - POST - Create new restaurant
+    - POST - Create new restaurant 
+      - expects such a json as input with the following keys (name, country, city, postcode, street, owner, email)
+      - if one of the above fields is NULL it returns an error
+      - otherwhise it returns a success and the restaurant details with the id and timestamps
     - GET - List of all restaurants
 2. /api/v1/restaurants/{ID}
+    where id is the restaurant_id 
    - GET - Get detailed Infos of that restaurant
    - PATCH - Update that restaurant
    - DELETE - Delete that restaurant
@@ -36,7 +58,7 @@ A visit can not be deleted, since it is a fact. if it was a mistake, just close 
    - PATCH 
 
 ## Guests
-guest deletion is not programmed because it should not delete, old facts would be orphanized
+Guest deletion is not programmed because it should not delete, old facts would be orphanized
 7. /api/v1/guests/
    - GET - Show number of all guests 
    - POST - new guest
@@ -51,38 +73,29 @@ guest deletion is not programmed because it should not delete, old facts would b
 
 
 # Roles & Rights
+Here is an overview about the given Roles and the rights therein.
+For testing the admin role is used.
 ![Roles_and_Rights](/docs/roles_and_rights.PNG)
 
-# Todo
-- PEP8 stuff
-- ERD corrections
-- Documentation. why there are that many endpoints and only x many tests
-
-# Motivation for the project
-
-# Dependencies
 
 # How to start
-
-# How to host
-
-# How to authenticate
-Name            fsnd_corona
-Tenant Domain   sbu47533.eu.auth0.com
-Client_ID       HljTzT3THfu0P378ejF06XH0jRycrBEc
-Client Secret   -IKso73RjdJHmYT3KpOQJdXKbXdKujcdKNNvJ1mzSb0v_oWu6zXOVYuA6JQb8YxQ
-
-api_name        fsnd_corona_api
-identifier      http://localhost:5000
-
-## HTML Template
-https://[your_tenant].us.auth0.com/authorize?audience=[your-audience]&response_type=token&client_id=[your_client_id] &redirect_uri=[redirect]
-
-## Login Page
-https://sbu47533.eu.auth0.com/authorize?audience=http://localhost:5000&response_type=token&
-client_id=HljTzT3THfu0P378ejF06XH0jRycrBEc&redirect_uri=http://localhost:5000
-
-https://sbu47533.eu.auth0.com/authorize?audience=http://localhost:5000&response_type=token&client_id=HljTzT3THfu0P378ejF06XH0jRycrBEc&redirect_uri=https://corona-fsnd.herokuapp.com
+1. Install the requirements with:
+```bash
+pip install -r requirements.txt
+```
+2. start the app locally:
+```bash
+cd src/api
+FLASK_APP=api.py flask run
+```
+3. If the tokens are not valid anymore generate new ones under this [Token-Generator](https://sbu47533.eu.auth0.com/authorize?audience=http://localhost:5000&response_type=token&client_id=HljTzT3THfu0P378ejF06XH0jRycrBEc&redirect_uri=https://corona-fsnd.herokuapp.com)
+And look in the result under token.
+To get the valid user login data look at "Users"
+4. If you want to run the tests go to the api folder and run:
+```bash
+python tests.py
+```
+If the tests doesn´t work it is probably because the token is not valid anymore. Look under 3 to generate a token, replace it in tests.py and try again.
 
 # Users
 Email:      admin@corona.com
@@ -101,17 +114,26 @@ Password:   GuestCorona1
 Role:       guest
 Access-Token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikx1OUhVcTJVWjdaRkdkdkNKenZ1diJ9.eyJpc3MiOiJodHRwczovL3NidTQ3NTMzLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MDBkNGU1ZDhlNWY1MzAwNmE4MjQ2MDEiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAiLCJpYXQiOjE2MTE1OTk2NTAsImV4cCI6MTYxMTYwNjg1MCwiYXpwIjoiSGxqVHpUM1RIZnUwUDM3OGVqRjA2WEgwalJ5Y3JCRWMiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImdldDpndWVzdC1kZXRhaWxzIiwiZ2V0Omd1ZXN0LW5vdGlmaWNhdGlvbnMiLCJnZXQ6cmVzdGF1cmFudCIsInBhdGNoOmd1ZXN0LWRldGFpbHMiLCJwYXRjaDpyZXN0YXVyYW50LXZpc2l0cyIsInBvc3Q6Z3Vlc3QiLCJwb3N0OnJlc3RhdXJhbnQtdmlzaXRzIl19.dl7YTAP6jxr5PTOeVrlOzuDDhne87HcpJhYimxeCo6g12XFJ8qxiQJc-JuDlyUMJol5WftGTFkQJ6syd8PNZ8yD9Zg-Nct_PgaNBKBEz-UPvvr5wRWYNdfFc1qRoen6mFSCwq1vXrL7azq0adaitLABzBQYfnruG2aX_p222QUU1ZnipgmpmDu4dtwiZypqAtheWRtH1icvGiFQ6Eg7WXe4KjQrOvSQ_1MQAnU61YniLUT6juv2dn0sGa2fDTeiQwHJa2Avjw8lpr_7-x7mnO5xtM3QAQRrx9kZFj0aZ7MUWeFSEX6LNKV0ZwfY5yviyg3AkrY8DJiB4TDenQBrh8Q
 
-# Documents that helped
+# Testing
+One word for the testing. I did not include 2 tests to every endpoint because I can´t fail an endpoint which just lists data. (technically I could when using an invalid bearer token, but it just makes no sense)
+
+# Miscellaneous
+## Documents that helped me when I was in need
 https://github.com/jungleBadger/udacity_coffee_shop/blob/master/troubleshooting/generate_token.md
 https://knowledge.udacity.com/questions/423462
 https://stackoverflow.com/questions/34478320/how-to-set-gunicorn-to-find-a-flask-application/34478356
 
-## My - Heroku URL
-https://corona-fsnd.herokuapp.com/
-https://git.heroku.com/corona-fsnd.git
+## .gitignore
+- local python environment
+- pycaches
+---
 
-# Befehl um die Migration anzustoßen
+# Notes for myself:
+
+### Run migrations for my folder-structure
 ```bash
-heroku run FLASK_APP=src/api/api.py flask db upgrade --directory src/api/migr
-ations
+heroku run FLASK_APP=src/api/api.py flask db upgrade --directory src/api/migrations
 ```
+### Heroku specific infos
+- added wsgi.py with it´s content to get gunicorn and procfile call the correct python file
+- manage.py is not needed
