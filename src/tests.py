@@ -4,7 +4,7 @@ import json
 from flask_sqlalchemy import SQLAlchemy
 from api.api import create_app
 from api.database.models import setup_db, Restaurant, Table, User, Visit
-from config import TestConfig
+from api.config import TestConfig
 
 #https://knowledge.udacity.com/questions/373159
 # for unittest i dont need migrations just db.create_all

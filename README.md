@@ -55,6 +55,8 @@ guest deletion is not programmed because it should not delete, old facts would b
 
 # Todo
 - All the heroku stuff
+- PEP8 stuff
+- ERD corrections
 - Documentation. why there are that many endpoints and only x many tests
 
 # Motivation for the project
@@ -104,3 +106,9 @@ https://knowledge.udacity.com/questions/423462
 ## My - Heroku URL
 https://corona-fsnd.herokuapp.com/
 https://git.heroku.com/corona-fsnd.git
+
+# Befehl um die Migration anzustoßen
+```bash
+heroku run FLASK_APP=src/api/api.py flask db upgrade --directory src/api/migr
+ations
+```
