@@ -30,9 +30,6 @@ Here is the list of all possible endpoints:
 ## Restaurants
 1. /api/v1/restaurants/
     - POST - Create new restaurant 
-      - expects such a json as input with the following keys (name, country, city, postcode, street, owner, email)
-      - if one of the above fields is NULL it returns an error
-      - otherwhise it returns a success and the restaurant details with the id and timestamps
     - GET - List of all restaurants
 2. /api/v1/restaurants/{ID}
     where id is the restaurant_id 

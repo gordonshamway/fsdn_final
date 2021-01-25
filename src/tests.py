@@ -506,6 +506,129 @@ class RestaurantTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res_payload['success'], True)
 
+    def test_admin_role_success(self):
+        TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikx1OUhVcTJVWjdaRkdkdkNKenZ1diJ9.eyJpc3MiOiJodHRwczovL3NidTQ3NTMzLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MDBkNGRiNzhlNWY1MzAwNmE4MjQ1Y2YiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAiLCJpYXQiOjE2MTE1OTk0MzksImV4cCI6MTYxMTYwNjYzOSwiYXpwIjoiSGxqVHpUM1RIZnUwUDM3OGVqRjA2WEgwalJ5Y3JCRWMiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImRlbGV0ZTpyZXN0YXVyYW50IiwiZGVsZXRlOnJlc3RhdXJhbnQtdGFibGUiLCJnZXQ6Z3Vlc3QtZGV0YWlscyIsImdldDpndWVzdC1ub3RpZmljYXRpb25zIiwiZ2V0Omd1ZXN0cyIsImdldDpyZXN0YXVyYW50IiwiZ2V0OnJlc3RhdXJhbnQtZGV0YWlscyIsImdldDpyZXN0YXVyYW50LXZpc2l0cyIsInBhdGNoOmd1ZXN0LWRldGFpbHMiLCJwYXRjaDpyZXN0YXVyYW50LWRldGFpbHMiLCJwYXRjaDpyZXN0YXVyYW50LXZpc2l0cyIsInBvc3Q6Z3Vlc3QiLCJwb3N0OnJlc3RhdXJhbnQiLCJwb3N0OnJlc3RhdXJhbnQtdGFibGUiLCJwb3N0OnJlc3RhdXJhbnQtdmlzaXRzIl19.sUJbxpPFm0tQV5z5-Kc9gicFxXwU5AYkKtE6VZdFpL8r5Ftqu1wGVh_tX0xNc8AqQOQGMS5CwGpQuEXO7_ptPt1xKzubydR8PXRtN2tTeBIeAvz-PH_vofy_2DMli84tBGdLOYNfOVmuefAHlo2sgVQy9qmobRrKHYpBMLV16Eppd0mM4ri34jKUAi6L7PZkz-7oN9r-SghpFOp0qeyv3Sa0dv-Gmi3W47MlLqveDcVx-pnLUI6890ZXgdFenyQRif8ECrtuuBhL3NhPFfsL2n1kI00jpLZg3C1UtNjnDzJS75DMmuhBFS7MOChJGaRiyPhAh_5F7m_wgeVw-hku0Q'
+        headers = {'Authorization': 'Bearer ' +
+                   TOKEN, 'Content-type': 'application/json'}
+        test_data = {
+            'name': 'Dieter Konrad',
+            'street': 'Banausenweg 1',
+            'city': 'Duisburg',
+            'postcode': '49257',
+            'country': 'Germany',
+            'email': 'teest@test.com',
+        }
+        res = self.client().post('/api/v1/guests', json=test_data, headers=headers)
+        res_payload = json.loads(res.data)
+        guest_id = res_payload['guest']['id']
+
+        # and then test it
+        res = self.client().get(f'/api/v1/guests/{guest_id}', headers=headers)
+        res_payload = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res_payload['success'], True)
+        self.assertEqual(res_payload['guest']['name'], 'Dieter Konrad')
+
+    def test_admin_role_failure(self):
+        TOKEN = 'xxx'
+        headers = {'Authorization': 'Bearer ' +
+                   TOKEN, 'Content-type': 'application/json'}
+        test_data = {
+            'name': 'Dieter Konrad',
+            'street': 'Banausenweg 1',
+            'city': 'Duisburg',
+            'postcode': '49257',
+            'country': 'Germany',
+            'email': 'teest@test.com',
+        }
+        res = self.client().post('/api/v1/guests', json=test_data, headers=headers)
+        res_payload = json.loads(res.data)
+        guest_id = res_payload['guest']['id']
+
+        # and then test it
+        res = self.client().get(f'/api/v1/guests/{guest_id}', headers=headers)
+        res_payload = json.loads(res.data)
+        self.assertEqual(res_payload['success'], False)
+    
+    def test_restaurant_manager_success(self):
+        TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikx1OUhVcTJVWjdaRkdkdkNKenZ1diJ9.eyJpc3MiOiJodHRwczovL3NidTQ3NTMzLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MDBkNGUzZDAzMGI4ZjAwNmE1MTQzODIiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAiLCJpYXQiOjE2MTE1OTk2MDUsImV4cCI6MTYxMTYwNjgwNSwiYXpwIjoiSGxqVHpUM1RIZnUwUDM3OGVqRjA2WEgwalJ5Y3JCRWMiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImdldDpyZXN0YXVyYW50IiwiZ2V0OnJlc3RhdXJhbnQtZGV0YWlscyIsImdldDpyZXN0YXVyYW50LXZpc2l0cyIsInBhdGNoOnJlc3RhdXJhbnQtZGV0YWlscyIsInBvc3Q6cmVzdGF1cmFudCIsInBvc3Q6cmVzdGF1cmFudC10YWJsZSJdfQ.OlSvq3GVHNaab6gWDl_CNfb7p-UCwdqr5Ut4mM-ZX5sU1Yt0WrWiXDLgd6fMYOSlEtsDlybmg-M-XS-B9BVbrK1yrW8FESysFM9_Zq-Q386GzBsPUWCqVG7QGoruHa4kvkJhMeytbRLQrk3lV_F1ngkyjZ1CvbgD0Z2GokKnUlpT3GhD4j1oO2rwUoFYQ9lpvZngJe_dsMLVrMxxDS8jMhYJiapKL4B-57Ddojb6oT58AE_IRe3KGruSd8GFS309HMV7w_eB7g-7PYUVA0xNjbMC4lSy0MOFoBS3GjGfBjdQkNe5ew9YcFi_gqoS9WpDgqmxC8KMuKyaYF8KnwN4fw'
+        headers = {'Authorization': 'Bearer ' +
+                   TOKEN, 'Content-type': 'application/json'}
+        test_data = {
+            'name': 'Yummy Restaurant',
+            'country': 'Germany',
+            'city': 'Ratingen',
+            'postcode': '40885',
+            'street': 'Scheidter Bruch 20',
+            'owner': 'Stefan Buchholz',
+            'email': 'stef.buchholz@abc.com'
+        }
+        res = self.client().post('/api/v1/restaurants', json=test_data, headers=headers)
+        res_payload = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res_payload['success'], True)
+        self.assertEqual(res_payload['restaurant']['name'], 'Yummy Restaurant')
+
+    def test_restaurant_manager_failure(self):
+        TOKEN = 'xxx'
+        headers = {'Authorization': 'Bearer ' +
+                   TOKEN, 'Content-type': 'application/json'}
+        test_data = {
+            'name': 'Yummy Restaurant',
+            'country': 'Germany',
+            'city': 'Ratingen',
+            'postcode': '40885',
+            'street': 'Scheidter Bruch 20',
+            'owner': 'Stefan Buchholz',
+            'email': 'stef.buchholz@abc.com'
+        }
+        res = self.client().post('/api/v1/restaurants', json=test_data, headers=headers)
+        res_payload = json.loads(res.data)
+        self.assertEqual(res_payload['success'], False)
+
+    def test_guest_role_success(self):
+        TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikx1OUhVcTJVWjdaRkdkdkNKenZ1diJ9.eyJpc3MiOiJodHRwczovL3NidTQ3NTMzLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MDBkNGU1ZDhlNWY1MzAwNmE4MjQ2MDEiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAiLCJpYXQiOjE2MTE1OTk2NTAsImV4cCI6MTYxMTYwNjg1MCwiYXpwIjoiSGxqVHpUM1RIZnUwUDM3OGVqRjA2WEgwalJ5Y3JCRWMiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImdldDpndWVzdC1kZXRhaWxzIiwiZ2V0Omd1ZXN0LW5vdGlmaWNhdGlvbnMiLCJnZXQ6cmVzdGF1cmFudCIsInBhdGNoOmd1ZXN0LWRldGFpbHMiLCJwYXRjaDpyZXN0YXVyYW50LXZpc2l0cyIsInBvc3Q6Z3Vlc3QiLCJwb3N0OnJlc3RhdXJhbnQtdmlzaXRzIl19.dl7YTAP6jxr5PTOeVrlOzuDDhne87HcpJhYimxeCo6g12XFJ8qxiQJc-JuDlyUMJol5WftGTFkQJ6syd8PNZ8yD9Zg-Nct_PgaNBKBEz-UPvvr5wRWYNdfFc1qRoen6mFSCwq1vXrL7azq0adaitLABzBQYfnruG2aX_p222QUU1ZnipgmpmDu4dtwiZypqAtheWRtH1icvGiFQ6Eg7WXe4KjQrOvSQ_1MQAnU61YniLUT6juv2dn0sGa2fDTeiQwHJa2Avjw8lpr_7-x7mnO5xtM3QAQRrx9kZFj0aZ7MUWeFSEX6LNKV0ZwfY5yviyg3AkrY8DJiB4TDenQBrh8Q'
+        headers = {'Authorization': 'Bearer ' +
+                   TOKEN, 'Content-type': 'application/json'}
+        test_data = {
+            'name': 'Dieter Konrad',
+            'street': 'Banausenweg 1',
+            'city': 'Duisburg',
+            'postcode': '49257',
+            'country': 'Germany',
+            'email': 'teest@test.com',
+        }
+        res = self.client().post('/api/v1/guests', json=test_data, headers=headers)
+        res_payload = json.loads(res.data)
+        guest_id = res_payload['guest']['id']
+
+        # and then test it
+        res = self.client().get(f'/api/v1/guests/{guest_id}', headers=headers)
+        res_payload = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res_payload['success'], True)
+        self.assertEqual(res_payload['guest']['name'], 'Dieter Konrad')
+
+    def test_guest_role_failure(self):
+        TOKEN = 'xxx'
+        headers = {'Authorization': 'Bearer ' +
+                   TOKEN, 'Content-type': 'application/json'}
+        test_data = {
+            'name': 'Dieter Konrad',
+            'street': 'Banausenweg 1',
+            'city': 'Duisburg',
+            'postcode': '49257',
+            'country': 'Germany',
+            'email': 'teest@test.com',
+        }
+        res = self.client().post('/api/v1/guests', json=test_data, headers=headers)
+        res_payload = json.loads(res.data)
+        guest_id = res_payload['guest']['id']
+
+        # and then test it
+        res = self.client().get(f'/api/v1/guests/{guest_id}', headers=headers)
+        res_payload = json.loads(res.data)
+        self.assertEqual(res_payload['success'], False)
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
