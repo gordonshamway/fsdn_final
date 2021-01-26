@@ -4,14 +4,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 from flask_migrate import Migrate
-from sqlalchemy import Column, String, Integer, Date, DateTime, Boolean, ForeignKey
-
-#database_name = "corona"
-#username = os.environ.get('PROD_USERNAME')
-#password = os.environ.get('PROD_PASSWORD')
-#server = os.environ.get('PROD_SERVER')
-#port = os.environ.get('PROD_PORT')
-#database_path = "postgres://{}:{}@{}:{}/{}".format(username, password, server, port, database_name)
+from sqlalchemy import Column, String, Integer, Date, DateTime
+from sqlalchemy import Boolean, ForeignKey
 
 db = SQLAlchemy()
 
@@ -98,7 +92,6 @@ class Table(db.Model):
         db.session.commit()
 
     def soft_delete(self):
-        #self.is_soft_deleted = True
         self.last_modified_date = func.now()
         db.session.commit()
 

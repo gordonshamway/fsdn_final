@@ -16,18 +16,11 @@ from .config import DevConfig, TestConfig
 def create_app(config_object=DevConfig()):
     app = Flask(__name__)
     app.config.from_object(config_object)
-    #print('this show the current config after applying it:')
-    # print('*******************************************')
-    # print(app.config)
     db = SQLAlchemy(app)
     db.init_app(app)
     setup_db(app)
     migrate = Migrate(app, db)
     cors = CORS(app, resources={r"/*": {"origins": "*"}})
-
-    ##########################
-    ######### Routes #########
-    ##########################
 
     @app.route('/api/v1/restaurants', methods=['POST'])
     @requires_auth('post:restaurant')
@@ -152,12 +145,15 @@ def create_app(config_object=DevConfig()):
                 this_restaurant.delete()
                 return jsonify({
                     "success": True,
-                    "message": f"Restaurant {str(restaurant_id)} successfully deleted"
+                    "message":
+                        f"Restaurant {str(restaurant_id)} successfully deleted"
                 })
             except Exception():
                 abort(422)
 
-    @app.route('/api/v1/restaurants/<int:restaurant_id>/tables', methods=['POST'])
+    @app.route(
+        '/api/v1/restaurants/<int:restaurant_id>/tables',
+        methods=['POST'])
     @requires_auth('post:restaurant-table')
     def create_restaurant_tables(token, restaurant_id):
         '''Creates a new table in a restaurant
@@ -178,14 +174,17 @@ def create_app(config_object=DevConfig()):
                 return jsonify({
                     'success': True,
                     'table_id': this_table.id,
-                    'message': f'Table created in restaurant {str(restaurant_id)}'
+                    'message':
+                        f'Table created in restaurant {str(restaurant_id)}'
                 })
             else:
                 abort(404)
         except Exception:
             abort(422)
 
-    @app.route('/api/v1/restaurants/<int:restaurant_id>/tables/<int:table_id>', methods=['DELETE'])
+    @app.route(
+        '/api/v1/restaurants/<int:restaurant_id>/tables/<int:table_id>',
+        methods=['DELETE'])
     @requires_auth('delete:restaurant-table')
     def delete_restaurant_table(token, restaurant_id, table_id):
         try:
@@ -202,16 +201,20 @@ def create_app(config_object=DevConfig()):
 
             return jsonify({
                 'success': True,
-                'message': f'Successfully deleted table {str(table_id)} from restaurant {str(restaurant_id)}'
+                'message': (
+                    f'Successfully deleted table {str(table_id)} from '
+                    f'restaurant {str(restaurant_id)}'
+                    )
             })
         except Exception:
             abort(404)
 
-    @app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['GET'])
+    @app.route(
+        '/api/v1/restaurants/<int:restaurant_id>/visits',
+        methods=['GET'])
     @requires_auth('get:restaurant-visits')
     def get_restaurant_visits(token, restaurant_id):
         '''Receive the list of all guests for that restaurant_id
-        @TODO: Maybe I need more parameters here to control the start_date, or get also only sick people
         '''
         try:
             this_restaurants_visits = Visit.query.filter_by(
@@ -223,7 +226,9 @@ def create_app(config_object=DevConfig()):
         except Exception:
             abort(404)
 
-    @app.route('/api/v1/restaurants/<int:restaurant_id>/visits', methods=['POST'])
+    @app.route(
+        '/api/v1/restaurants/<int:restaurant_id>/visits',
+        methods=['POST'])
     @requires_auth('post:restaurant-visits')
     def post_new_visit(token, restaurant_id):
         '''Post a new visit for the restaurant_id
@@ -243,12 +248,17 @@ def create_app(config_object=DevConfig()):
             return jsonify({
                 'success': True,
                 'visit_id': this_visit.id,
-                'message': f'New visit created at table {str(table_id)} in restaurant {str(restaurant_id)}'
+                'message': (
+                    f'New visit created at table {str(table_id)} '
+                    f'in restaurant {str(restaurant_id)}'
+                )
             })
         except Exception:
             abort(422)
 
-    @app.route('/api/v1/restaurants/<int:restaurant_id>/visits/<int:visit_id>', methods=['PATCH'])
+    @app.route(
+        '/api/v1/restaurants/<int:restaurant_id>/visits/<int:visit_id>',
+        methods=['PATCH'])
     @requires_auth('patch:restaurant-visits')
     def update_visit(token, restaurant_id, visit_id):
         '''Stop and end the visit
@@ -262,7 +272,10 @@ def create_app(config_object=DevConfig()):
             this_visit.update()
             return jsonify({
                 'success': True,
-                'message': f'Visit {str(visit_id)} has been updated in restaurant {str(restaurant_id)}'
+                'message': (
+                    f'Visit {str(visit_id)} has been updated '
+                    f'in restaurant {str(restaurant_id)}'
+                )
             })
         except Exception:
             abort(422)
@@ -366,7 +379,8 @@ def create_app(config_object=DevConfig()):
                 # Convert ISO Value 2021-01-19 to Date Type
                 sick_since_converted = datetime.strptime(
                     sick_since, '%Y-%m-%d')
-                if sick_since_converted and sick_since_converted != this_guest.sick_since:
+                if sick_since_converted and
+                sick_since_converted != this_guest.sick_since:
                     this_guest.sick_since = sick_since_converted
 
             this_guest.update()
@@ -382,15 +396,19 @@ def create_app(config_object=DevConfig()):
     @app.route('/api/v1/guests/<int:guest_id>/notifications', methods=['GET'])
     @requires_auth('get:guest-notifications')
     def list_a_users_notifications(token, guest_id):
-        '''Searches for any notifications of a user, in case somebody was sick nearby
+        '''Searches for any notifications of a user, \
+           in case somebody was sick nearby
         '''
-        # Find out my visits in that restaurant, and for each visit, find all other
+        # Find out my visits in that restaurant, and for each visit,
+        # find all other
         # guests that have been there in my time which would have been sick.
 
         try:
             my_visits = Visit.query.filter_by(id=guest_id).all()
             visits_of_sick_people = Visit.query.distinct(
-                Visit.visit_start_dt, Visit.visit_end_dt).join(User).filter(User.sick == True).all()
+                Visit.visit_start_dt,
+                Visit.visit_end_dt
+                ).join(User).filter(User.sick == True).all()
             # SQL Description
             # Select
             # distinct
@@ -405,17 +423,15 @@ def create_app(config_object=DevConfig()):
                 start = i.visit_start_dt
                 end = i.visit_end_dt
                 dangerous_visits += Visit.query.filter(
-                    Visit.user_id == guest_id, Visit.visit_start_dt >= start, Visit.visit_end_dt <= end).count()
+                    Visit.user_id == guest_id,
+                    Visit.visit_start_dt >= start,
+                    Visit.visit_end_dt <= end).count()
             return jsonify({
                 'success': True,
                 'number_of_dangerous_visits': dangerous_visits
             })
         except Exception:
             abort(422)
-
-    ##########################
-    ##### Error Handling #####
-    ##########################
 
     @app.errorhandler(422)
     def unprocessable(error):
